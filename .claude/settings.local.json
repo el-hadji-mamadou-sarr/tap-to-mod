@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir:*)",
+      "Bash(findstr:*)",
+      "*",
+      "Bash(npm run build:*)",
+      "Bash(npx tsc:*)",
+      "Bash(del \"c:\\\\Users\\\\elhad\\\\Documents\\\\glame\\\\tap-to-mod\\\\src\\\\client\\\\hooks\\\\useCounter.ts\")"
+    ]
+  }
+}
