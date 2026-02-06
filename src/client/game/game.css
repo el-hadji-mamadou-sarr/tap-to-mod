@@ -1211,81 +1211,170 @@
 }
 
 /* =====================================================
-   AUTO-MOD BOT STYLES
+   AUTO-MOD BOT STYLES - Compact Round Button with Cooldown
    ===================================================== */
 
 .auto-mod-button {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 12px 20px;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-  color: white;
-  border: none;
-  border-radius: 30px;
-  font-size: 14px;
-  font-weight: 700;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  border: 2px solid #4a5568;
+  border-radius: 50%;
   cursor: pointer;
-  z-index: 80;
-  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
-  transition: all 0.2s ease;
-  animation: button-pulse 2s ease-in-out infinite;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: visible;
+  flex-shrink: 0;
+  --cooldown-progress: 0;
 }
 
-.auto-mod-button:hover:not(:disabled) {
-  transform: translateY(-2px) scale(1.05);
-  box-shadow: 0 6px 25px rgba(99, 102, 241, 0.5);
+/* Cooldown overlay - radial wipe effect */
+.auto-mod-cooldown-overlay {
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 0deg,
+    rgba(30, 41, 59, 0.9) calc(var(--cooldown-progress) * 360deg),
+    transparent calc(var(--cooldown-progress) * 360deg)
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+.auto-mod-icon {
+  font-size: 16px;
+  line-height: 1;
+  position: relative;
+  z-index: 2;
+  transition: all 0.3s ease;
+}
+
+/* Cooldown state - greyed out with radial fill */
+.auto-mod-cooldown {
+  border-color: #4a5568;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  cursor: not-allowed;
+}
+
+.auto-mod-cooldown .auto-mod-icon {
+  filter: grayscale(0.7) brightness(0.7);
+  opacity: 0.6;
+}
+
+.auto-mod-cooldown .auto-mod-cooldown-overlay {
+  background: conic-gradient(
+    from -90deg,
+    rgba(30, 41, 59, 0.85) calc(var(--cooldown-progress) * 360deg),
+    transparent calc(var(--cooldown-progress) * 360deg)
+  );
+}
+
+/* Ready state - full glow and pulse */
+.auto-mod-ready {
+  border-color: #00ffff;
+  box-shadow:
+    0 0 12px rgba(0, 255, 255, 0.5),
+    0 0 24px rgba(0, 255, 255, 0.2),
+    inset 0 0 8px rgba(0, 255, 255, 0.1);
+  animation: ready-pulse 1.5s ease-in-out infinite;
+}
+
+.auto-mod-ready .auto-mod-cooldown-overlay {
+  display: none;
+}
+
+.auto-mod-ready .auto-mod-icon {
+  filter: drop-shadow(0 0 4px #00ffff);
+  animation: ready-icon-glow 1.5s ease-in-out infinite;
+}
+
+@keyframes ready-pulse {
+  0%, 100% {
+    box-shadow:
+      0 0 12px rgba(0, 255, 255, 0.5),
+      0 0 24px rgba(0, 255, 255, 0.2),
+      inset 0 0 8px rgba(0, 255, 255, 0.1);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow:
+      0 0 20px rgba(0, 255, 255, 0.7),
+      0 0 35px rgba(0, 255, 255, 0.35),
+      inset 0 0 12px rgba(0, 255, 255, 0.2);
+    transform: scale(1.05);
+  }
+}
+
+@keyframes ready-icon-glow {
+  0%, 100% {
+    filter: drop-shadow(0 0 4px #00ffff);
+    transform: scale(1);
+  }
+  50% {
+    filter: drop-shadow(0 0 8px #00ffff) drop-shadow(0 0 12px rgba(0, 255, 255, 0.5));
+    transform: scale(1.1);
+  }
+}
+
+.auto-mod-ready:hover:not(:disabled) {
+  transform: scale(1.15);
+  box-shadow:
+    0 0 25px rgba(0, 255, 255, 0.7),
+    0 0 45px rgba(0, 255, 255, 0.35),
+    inset 0 0 15px rgba(0, 255, 255, 0.25);
 }
 
 .auto-mod-button:active:not(:disabled) {
   transform: scale(0.95);
 }
 
-@keyframes button-pulse {
-  0%, 100% { box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4); }
-  50% { box-shadow: 0 4px 25px rgba(99, 102, 241, 0.6); }
-}
-
-.auto-mod-icon {
-  font-size: 18px;
-}
-
-.auto-mod-text {
-  letter-spacing: 1px;
-}
-
 /* Active state - bot is running */
 .auto-mod-active {
-  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
-  box-shadow: 0 4px 20px rgba(34, 197, 94, 0.5);
-  animation: auto-mod-running 0.5s ease-in-out infinite alternate;
+  background: linear-gradient(135deg, #0a1628 0%, #0f2847 100%);
+  border-color: #00ff88;
+  box-shadow:
+    0 0 15px rgba(0, 255, 136, 0.6),
+    0 0 30px rgba(0, 255, 136, 0.3),
+    inset 0 0 10px rgba(0, 255, 136, 0.2);
+  animation: auto-mod-active-pulse 0.6s ease-in-out infinite alternate;
 }
 
-@keyframes auto-mod-running {
+.auto-mod-active .auto-mod-cooldown-overlay {
+  display: none;
+}
+
+.auto-mod-active .auto-mod-icon {
+  filter: drop-shadow(0 0 6px #00ff88);
+  animation: icon-spin 1s linear infinite;
+}
+
+@keyframes icon-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes auto-mod-active-pulse {
   0% {
-    transform: scale(1);
-    box-shadow: 0 4px 20px rgba(34, 197, 94, 0.5);
+    box-shadow:
+      0 0 15px rgba(0, 255, 136, 0.6),
+      0 0 30px rgba(0, 255, 136, 0.3),
+      inset 0 0 10px rgba(0, 255, 136, 0.2);
   }
   100% {
-    transform: scale(1.05);
-    box-shadow: 0 6px 30px rgba(34, 197, 94, 0.7);
+    box-shadow:
+      0 0 22px rgba(0, 255, 136, 0.8),
+      0 0 45px rgba(0, 255, 136, 0.45),
+      inset 0 0 15px rgba(0, 255, 136, 0.3);
   }
-}
-
-/* Used state - no longer available */
-.auto-mod-used {
-  background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-  cursor: not-allowed;
-  opacity: 0.7;
-  animation: none;
-}
-
-.auto-mod-used .auto-mod-icon {
-  filter: grayscale(1);
 }
 
 /* Auto-mod overlay when active */
@@ -1302,23 +1391,55 @@
 }
 
 .auto-mod-banner {
-  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
-  color: white;
-  padding: 10px 24px;
-  border-radius: 20px;
-  font-size: 16px;
-  font-weight: 800;
-  letter-spacing: 2px;
-  box-shadow: 0 4px 20px rgba(34, 197, 94, 0.5);
-  animation: banner-bounce 0.6s ease-in-out infinite alternate;
+  background: linear-gradient(135deg, #0a1628 0%, #0f2847 100%);
+  color: #00ff88;
+  padding: 12px 28px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 900;
+  letter-spacing: 4px;
+  font-family: 'Courier New', monospace;
+  text-transform: uppercase;
+  border: 2px solid #00ff88;
+  box-shadow:
+    0 0 30px rgba(0, 255, 136, 0.4),
+    0 0 60px rgba(0, 255, 136, 0.2),
+    inset 0 0 20px rgba(0, 255, 136, 0.05);
+  animation: banner-pulse 0.5s ease-in-out infinite alternate;
+  position: relative;
 }
 
-@keyframes banner-bounce {
+.auto-mod-banner::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 255, 136, 0.03) 2px,
+    rgba(0, 255, 136, 0.03) 4px
+  );
+  pointer-events: none;
+  animation: scanlines 0.1s linear infinite;
+}
+
+@keyframes scanlines {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(4px); }
+}
+
+@keyframes banner-pulse {
   0% {
-    transform: translateY(0) scale(1);
+    transform: scale(1);
+    text-shadow: 0 0 10px #00ff88;
   }
   100% {
-    transform: translateY(-5px) scale(1.02);
+    transform: scale(1.02);
+    text-shadow: 0 0 20px #00ff88, 0 0 40px rgba(0, 255, 136, 0.5);
   }
 }
 
@@ -1331,17 +1452,17 @@
   bottom: 0;
   pointer-events: none;
   z-index: 70;
-  border: 3px solid rgba(34, 197, 94, 0.5);
+  border: 3px solid rgba(0, 255, 136, 0.5);
   animation: glow-pulse 0.8s ease-in-out infinite alternate;
 }
 
 @keyframes glow-pulse {
   0% {
-    border-color: rgba(34, 197, 94, 0.3);
-    box-shadow: inset 0 0 30px rgba(34, 197, 94, 0.1);
+    border-color: rgba(0, 255, 136, 0.3);
+    box-shadow: inset 0 0 40px rgba(0, 255, 136, 0.1);
   }
   100% {
-    border-color: rgba(34, 197, 94, 0.6);
-    box-shadow: inset 0 0 50px rgba(34, 197, 94, 0.2);
+    border-color: rgba(0, 255, 136, 0.6);
+    box-shadow: inset 0 0 80px rgba(0, 255, 136, 0.2);
   }
 }

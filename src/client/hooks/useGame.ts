@@ -17,8 +17,9 @@ interface UseGameReturn {
   showHint: boolean;
   levelName: string;
   containerHeight: number;
-  autoModAvailable: boolean;
   autoModActive: boolean;
+  autoModCooldown: number; // 0-1, where 0 = ready, 1 = full cooldown
+  autoModReady: boolean;
   activateAutoMod: () => void;
 }
 
@@ -45,13 +46,15 @@ function generatePostId(): string {
 }
 
 const AUTO_MOD_DURATION = 4000; // 4 seconds of auto-modding
+const AUTO_MOD_COOLDOWN = 30000; // 30 seconds cooldown
 
 export function useGame(): UseGameReturn {
   const [gameState, setGameState] = useState<GameState>({ ...INITIAL_GAME_STATE, startTime: Date.now() });
   const [activePosts, setActivePosts] = useState<ActivePost[]>([]);
   const [showHint, setShowHint] = useState(true);
-  const [autoModAvailable, setAutoModAvailable] = useState(true);
   const [autoModActive, setAutoModActive] = useState(false);
+  const [autoModCooldown, setAutoModCooldown] = useState(0); // 0 = ready, 1 = full cooldown
+  const [autoModReady, setAutoModReady] = useState(true);
 
   const gameStateRef = useRef(gameState);
   const activePostsRef = useRef(activePosts);
@@ -143,16 +146,32 @@ export function useGame(): UseGameReturn {
 
   // Auto-mod: automatically remove bad posts
   const activateAutoMod = useCallback(() => {
-    if (!autoModAvailable || autoModActive || gameStateRef.current.isGameOver) return;
+    if (!autoModReady || autoModActive || gameStateRef.current.isGameOver) return;
 
-    setAutoModAvailable(false);
+    setAutoModReady(false);
     setAutoModActive(true);
+    setAutoModCooldown(1);
 
-    // Deactivate after duration
+    // Deactivate after duration, then start cooldown
     setTimeout(() => {
       setAutoModActive(false);
+
+      // Start cooldown animation
+      const cooldownStart = Date.now();
+      const cooldownInterval = setInterval(() => {
+        const elapsed = Date.now() - cooldownStart;
+        const remaining = 1 - (elapsed / AUTO_MOD_COOLDOWN);
+
+        if (remaining <= 0) {
+          setAutoModCooldown(0);
+          setAutoModReady(true);
+          clearInterval(cooldownInterval);
+        } else {
+          setAutoModCooldown(remaining);
+        }
+      }, 50); // Update every 50ms for smooth animation
     }, AUTO_MOD_DURATION);
-  }, [autoModAvailable, autoModActive]);
+  }, [autoModReady, autoModActive]);
 
   // Auto-mod logic: remove bad posts automatically when active
   const processAutoMod = useCallback(() => {
@@ -275,8 +294,9 @@ export function useGame(): UseGameReturn {
     setActivePosts([]);
     setGameState({ ...INITIAL_GAME_STATE, startTime: Date.now() });
     setShowHint(true);
-    setAutoModAvailable(true);
     setAutoModActive(false);
+    setAutoModCooldown(0);
+    setAutoModReady(true);
   }, []);
 
   // Start game loop
@@ -304,8 +324,9 @@ export function useGame(): UseGameReturn {
     showHint,
     levelName: levelRef.current.name,
     containerHeight: CONTAINER_HEIGHT,
-    autoModAvailable,
     autoModActive,
+    autoModCooldown,
+    autoModReady,
     activateAutoMod,
   };
 }
