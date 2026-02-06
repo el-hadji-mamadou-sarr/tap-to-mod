@@ -17,6 +17,9 @@ interface UseGameReturn {
   showHint: boolean;
   levelName: string;
   containerHeight: number;
+  autoModAvailable: boolean;
+  autoModActive: boolean;
+  activateAutoMod: () => void;
 }
 
 const INITIAL_GAME_STATE: GameState = {
@@ -41,13 +44,18 @@ function generatePostId(): string {
   return `post-${++postIdCounter}-${Date.now()}`;
 }
 
+const AUTO_MOD_DURATION = 4000; // 4 seconds of auto-modding
+
 export function useGame(): UseGameReturn {
   const [gameState, setGameState] = useState<GameState>({ ...INITIAL_GAME_STATE, startTime: Date.now() });
   const [activePosts, setActivePosts] = useState<ActivePost[]>([]);
   const [showHint, setShowHint] = useState(true);
+  const [autoModAvailable, setAutoModAvailable] = useState(true);
+  const [autoModActive, setAutoModActive] = useState(false);
 
   const gameStateRef = useRef(gameState);
   const activePostsRef = useRef(activePosts);
+  const autoModActiveRef = useRef(false);
   const animFrameRef = useRef<number>(0);
   const lastTimeRef = useRef<number>(0);
   const lastSpawnRef = useRef<number>(0);
@@ -56,6 +64,7 @@ export function useGame(): UseGameReturn {
 
   gameStateRef.current = gameState;
   activePostsRef.current = activePosts;
+  autoModActiveRef.current = autoModActive;
 
   const spawnPost = useCallback(() => {
     const level = levelRef.current;
@@ -132,6 +141,52 @@ export function useGame(): UseGameReturn {
     }
   }, []);
 
+  // Auto-mod: automatically remove bad posts
+  const activateAutoMod = useCallback(() => {
+    if (!autoModAvailable || autoModActive || gameStateRef.current.isGameOver) return;
+
+    setAutoModAvailable(false);
+    setAutoModActive(true);
+
+    // Deactivate after duration
+    setTimeout(() => {
+      setAutoModActive(false);
+    }, AUTO_MOD_DURATION);
+  }, [autoModAvailable, autoModActive]);
+
+  // Auto-mod logic: remove bad posts automatically when active
+  const processAutoMod = useCallback(() => {
+    if (!autoModActiveRef.current) return;
+
+    const posts = activePostsRef.current;
+    const badPosts = posts.filter(p => p.isBad && !p.removed);
+
+    if (badPosts.length > 0) {
+      // Remove one bad post per tick (staggered for visual effect)
+      const postToRemove = badPosts[0];
+
+      setActivePosts((prev) =>
+        prev.map((p) => {
+          if (p.id !== postToRemove.id || p.removed) return p;
+
+          // Give reduced points for auto-mod (half points, no combo)
+          setGameState((gs) => {
+            if (gs.isGameOver) return gs;
+            return {
+              ...gs,
+              score: gs.score + 5, // Half points
+              postsRemoved: gs.postsRemoved + 1,
+              correctRemovals: gs.correctRemovals + 1,
+              // No combo bonus for auto-mod
+            };
+          });
+
+          return { ...p, removed: true, removedCorrectly: true };
+        })
+      );
+    }
+  }, []);
+
   const gameLoop = useCallback(
     (timestamp: number) => {
       if (!lastTimeRef.current) lastTimeRef.current = timestamp;
@@ -199,6 +254,9 @@ export function useGame(): UseGameReturn {
 
       checkLevelUp();
 
+      // Process auto-mod if active
+      processAutoMod();
+
       // Hide hint after 3 seconds
       if (Date.now() - state.startTime > 3000) {
         setShowHint(false);
@@ -206,7 +264,7 @@ export function useGame(): UseGameReturn {
 
       animFrameRef.current = requestAnimationFrame(gameLoop);
     },
-    [spawnPost, checkLevelUp]
+    [spawnPost, checkLevelUp, processAutoMod]
   );
 
   const restart = useCallback(() => {
@@ -217,6 +275,8 @@ export function useGame(): UseGameReturn {
     setActivePosts([]);
     setGameState({ ...INITIAL_GAME_STATE, startTime: Date.now() });
     setShowHint(true);
+    setAutoModAvailable(true);
+    setAutoModActive(false);
   }, []);
 
   // Start game loop
@@ -244,5 +304,8 @@ export function useGame(): UseGameReturn {
     showHint,
     levelName: levelRef.current.name,
     containerHeight: CONTAINER_HEIGHT,
+    autoModAvailable,
+    autoModActive,
+    activateAutoMod,
   };
 }

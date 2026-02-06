@@ -74,9 +74,16 @@ export const PostCard = ({ id, title, username, karma, removed, removedCorrectly
         </div>
       </div>
       {removed && (
-        <div className={`post-stamp ${removedCorrectly ? 'stamp-correct' : 'stamp-wrong'}`}>
-          {removedCorrectly ? 'REMOVED' : 'WRONG!'}
-        </div>
+        <>
+          <div className={`post-stamp ${removedCorrectly ? 'stamp-correct' : 'stamp-wrong'}`}>
+            {removedCorrectly ? 'REMOVED' : 'WRONG!'}
+          </div>
+          {removedCorrectly && (
+            <div className="post-stamp stamp-banned">
+              BANNED
+            </div>
+          )}
+        </>
       )}
     </div>
   );

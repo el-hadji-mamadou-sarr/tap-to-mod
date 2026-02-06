@@ -23,7 +23,7 @@ interface Particle {
 }
 
 export const App = () => {
-  const { gameState, activePosts, tapPost, restart, showHint, levelName, containerHeight } = useGame();
+  const { gameState, activePosts, tapPost, restart, showHint, levelName, containerHeight, autoModAvailable, autoModActive, activateAutoMod } = useGame();
   const [floatingScores, setFloatingScores] = useState<FloatingScore[]>([]);
   const [particles, setParticles] = useState<Particle[]>([]);
   const [damageShake, setDamageShake] = useState(false);
@@ -267,6 +267,39 @@ export const App = () => {
       {levelUpEffect && (
         <div className="level-up-notification">
           LEVEL UP!
+        </div>
+      )}
+
+      {/* Auto-Mod Bot Button */}
+      {!gameState.isGameOver && (
+        <button
+          className={`auto-mod-button ${autoModActive ? 'auto-mod-active' : ''} ${!autoModAvailable ? 'auto-mod-used' : ''}`}
+          onClick={activateAutoMod}
+          disabled={!autoModAvailable || autoModActive}
+        >
+          {autoModActive ? (
+            <>
+              <span className="auto-mod-icon">🤖</span>
+              <span className="auto-mod-text">BOT ACTIVE</span>
+            </>
+          ) : autoModAvailable ? (
+            <>
+              <span className="auto-mod-icon">🤖</span>
+              <span className="auto-mod-text">AUTO-MOD</span>
+            </>
+          ) : (
+            <>
+              <span className="auto-mod-icon">🤖</span>
+              <span className="auto-mod-text">USED</span>
+            </>
+          )}
+        </button>
+      )}
+
+      {/* Auto-Mod Active Overlay */}
+      {autoModActive && (
+        <div className="auto-mod-overlay">
+          <div className="auto-mod-banner">🤖 AUTO-MOD ACTIVE 🤖</div>
         </div>
       )}
 
